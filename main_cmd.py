@@ -82,7 +82,7 @@ import pickle
 import pyarrow 
 import pyarrow.parquet as pq
 import pandas as pd
-from train import whole_process_training_single_iter, whole_process_training, whole_Network_training
+from utils_train import whole_process_training_single_iter, whole_process_training, whole_Network_training
 
 # from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt 
@@ -98,43 +98,43 @@ if not preprocessed:
 	signal_df = pq.read_pandas(data_dir + 'train.parquet').to_pandas()
 	_, all_flat_signals, all_points = peaks_on_flatten(signal_df, signal_ids)
 
-    ##### STEP 1A. Denoise & Extract Waveforms #####
+	##### STEP 1A. Denoise & Extract Waveforms #####
 	# construct waveforms with given window size 
 	waveforms = choose_chunk_peak(all_flat_signals, all_points, window_size=window_size)
 	print(waveforms.shape)
 	pickle.dump(waveforms, open(input_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'wb'))
 
-    ##### STEP 1B. Extract Global Features #####
-    if recalculate_peaks:
-        signal_fft = calculate_50hz_fourier_coefficient(signal_df.values)
-        signal_peaks = process_measurement(signal_df, meta_df, signal_fft)
-        signal_peaks.to_pickle(input_dir + 'signal_peaks.pkl')
-        del signal_fft
-        gc.collect()
-    else:
-        signal_peaks = pd.read_pickle(input_dir + 'signal_peaks.pkl')
-    signal_peaks = pd.merge(signal_peaks, meta_df[['signal_id', 'id_measurement', 'target']], on='signal_id', how='left')
+	##### STEP 1B. Extract Global Features #####
+	if recalculate_peaks:
+		signal_fft = calculate_50hz_fourier_coefficient(signal_df.values)
+		signal_peaks = process_measurement(signal_df, meta_df, signal_fft)
+		signal_peaks.to_pickle(input_dir + 'signal_peaks.pkl')
+		del signal_fft
+		gc.collect()
+	else:
+		signal_peaks = pd.read_pickle(input_dir + 'signal_peaks.pkl')
+	signal_peaks = pd.merge(signal_peaks, meta_df[['signal_id', 'id_measurement', 'target']], on='signal_id', how='left')
 
-    ### load KMeans results
-    # x, x_A, x_B, x_C = pickle.load(open('waves_list.dat','rb'))
-    # kmeans = KMeans(n_clusters=15, random_state=9, init='k-means++').fit(x)
-    # kmeans_A = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_A)
-    # kmeans_B = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_B)
-    # kmeans_C = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_C)
-    kmeans = pickle.load(open(input_dir + 'kmeans.dat', 'rb'))
-    kmeans_A = pickle.load(open(input_dir + 'kmeans_A.dat', 'rb'))
-    kmeans_B = pickle.load(open(input_dir + 'kmeans_B.dat', 'rb'))
-    kmeans_C = pickle.load(open(input_dir + 'kmeans_C.dat', 'rb'))
+	### load KMeans results
+	# x, x_A, x_B, x_C = pickle.load(open('waves_list.dat','rb'))
+	# kmeans = KMeans(n_clusters=15, random_state=9, init='k-means++').fit(x)
+	# kmeans_A = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_A)
+	# kmeans_B = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_B)
+	# kmeans_C = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_C)
+	kmeans = pickle.load(open(input_dir + 'kmeans.dat', 'rb'))
+	kmeans_A = pickle.load(open(input_dir + 'kmeans_A.dat', 'rb'))
+	kmeans_B = pickle.load(open(input_dir + 'kmeans_B.dat', 'rb'))
+	kmeans_C = pickle.load(open(input_dir + 'kmeans_C.dat', 'rb'))
 
-    X_global = create_global_features(meta_df, signal_peaks, kmeans, kmeans_A, kmeans_B, kmeans_C)
-    X_global.to_csv(input_dir + 'global_features.csv')
+	X_global = create_global_features(meta_df, signal_peaks, kmeans, kmeans_A, kmeans_B, kmeans_C)
+	X_global.to_csv(input_dir + 'global_features.csv')
 
 else:
-    X_global = pd.read_csv(input_dir + 'global_features.csv')
-    if not load_local_features:
-        waveforms = pickle.load(open(input_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'rb'))
-    else:
-        waveforms = None 
+	X_global = pd.read_csv(input_dir + 'global_features.csv')
+	if not load_local_features:
+		waveforms = pickle.load(open(input_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'rb'))
+	else:
+		waveforms = None 
 
 X_global.set_index('id_measurement', inplace=True)
 
@@ -154,32 +154,38 @@ output_folder = 'results_{}chunks_{}'.format(nchunks, loss_name)
 
 if num_iterations == 1:
 	_, best_proba, metrics, test_pred = whole_process_training_single_iter(meta_df, waveforms, X_global,
-	        local_features=local_features, NN_level=NN_level, NN_model=NN_model,
-	        Dense_layers=Dense_layers, NN_pretrained=NN_pretrained, layer_idx=layer_idx, NN_batch_size=NN_batch_size, 
-	        output_folder=output_folder, classifier=classifier, classifier_level=classifier_level, num_folds=num_folds,
-	        num_iterations=num_iterations, feature_set=feature_set, kfold_random_state=kfold_random_state, iter=iter,
-	        pretrained=pretrained, load_local_features=load_local_features, predict=predict, early_stopping_rounds=100, 
-	        verbose_eval=0, weights_dict=weights_dict, monitor=monitor, dropout=dropout, regularizer=regularizer, 
-	        loss_name=loss_name, from_logits=from_logits, kernel_size=kernel_size, n_epochs=n_epochs, units=units)
+			local_features=local_features, NN_level=NN_level, NN_model=NN_model,
+			Dense_layers=Dense_layers, NN_pretrained=NN_pretrained, layer_idx=layer_idx, NN_batch_size=NN_batch_size, 
+			output_folder=output_folder, classifier=classifier, classifier_level=classifier_level, num_folds=num_folds,
+			num_iterations=num_iterations, feature_set=feature_set, kfold_random_state=kfold_random_state, iter=iter,
+			pretrained=pretrained, load_local_features=load_local_features, predict=predict, early_stopping_rounds=100, 
+			verbose_eval=0, weights_dict=weights_dict, monitor=monitor, dropout=dropout, regularizer=regularizer, 
+			loss_name=loss_name, from_logits=from_logits, kernel_size=kernel_size, n_epochs=n_epochs, units=units)
 
 else:
 	if not NN_only:	
 		_, best_proba, metrics, test_pred = whole_process_training(meta_df, waveforms, X_global,
-		        local_features=local_features, NN_level=NN_level, NN_model=NN_model,
-		        Dense_layers=Dense_layers, NN_pretrained=NN_pretrained, layer_idx=layer_idx, NN_batch_size=NN_batch_size, 
-		        output_folder=output_folder, classifier=classifier, classifier_level=classifier_level, num_folds=num_folds,
-		        num_iterations=num_iterations, feature_set=feature_set, kfold_random_state=kfold_random_state, 
-		        load_local_features=load_local_features, pretrained=pretrained, predict=predict, early_stopping_rounds=100, 
-		        verbose_eval=0, weights_dict=weights_dict, monitor=monitor, dropout=dropout, regularizer=regularizer, 
-		        loss_name=loss_name, from_logits=from_logits, kernel_size=kernel_size, n_epochs=n_epochs, units=units)
+				local_features=local_features, NN_level=NN_level, NN_model=NN_model,
+				Dense_layers=Dense_layers, NN_pretrained=NN_pretrained, layer_idx=layer_idx, NN_batch_size=NN_batch_size, 
+				output_folder=output_folder, classifier=classifier, classifier_level=classifier_level, num_folds=num_folds,
+				num_iterations=num_iterations, feature_set=feature_set, kfold_random_state=kfold_random_state, 
+				load_local_features=load_local_features, pretrained=pretrained, predict=predict, early_stopping_rounds=100, 
+				verbose_eval=0, weights_dict=weights_dict, monitor=monitor, dropout=dropout, regularizer=regularizer, 
+				loss_name=loss_name, from_logits=from_logits, kernel_size=kernel_size, n_epochs=n_epochs, units=units)
+		test_pred.to_csv(output_folder + '/test_pred_{}_{}Dense_layers_{}_level_LAYER_{}_interfeatures_{}_{}_level.csv'.format(NN_model,
+			Dense_layers, NN_level, layer_idx, classifier, classifier_level))
 
 	else:
 		_, best_proba_RNN, metrics_RNN, test_pred_RNN, attention_weights = whole_Network_training(meta_df, waveforms,
-            NN_level=NN_level, NN_model=NN_model, Dense_layers=Dense_layers, NN_pretrained=NN_pretrained, 
-            layer_idx=layer_idx, NN_batch_size=NN_batch_size, indice_level=classifier_level,
-            output_folder=output_folder, kfold_random_state=kfold_random_state, num_folds=num_folds,
-            num_iterations=num_iterations, predict=predict, monitor=monitor, dropout=dropout, regularizer=regularizer,
-            kernel_size=kernel_size, from_logits=from_logits, loss_name=loss_name, 
-            extract_attention_weights=extract_attention_weights)
-
-
+			NN_level=NN_level, NN_model=NN_model, Dense_layers=Dense_layers, NN_pretrained=NN_pretrained, 
+			layer_idx=layer_idx, NN_batch_size=NN_batch_size, indice_level=classifier_level,
+			output_folder=output_folder, kfold_random_state=kfold_random_state, num_folds=num_folds,
+			num_iterations=num_iterations, predict=predict, monitor=monitor, dropout=dropout, regularizer=regularizer,
+			kernel_size=kernel_size, from_logits=from_logits, loss_name=loss_name, 
+			extract_attention_weights=extract_attention_weights)
+		test_pred.to_csv(output_folder + '/test_pred_NNonly_{}_{}Dense_layers_{}_level.csv'.format(NN_model,
+			Dense_layers, NN_level))
+		if extract_attention_weights:
+			pickle.dump(attention_weights, open(output_folder + '/attention_weights_{}_{}Dense_layers_{}_level.dat'.format(NN_model,
+				Dense_layers, NN_level), 'wb'))
+ 

@@ -5,7 +5,7 @@ import pickle
 import pyarrow 
 import pyarrow.parquet as pq
 import pandas as pd
-from train import whole_process_training_single_iter, whole_process_training, whole_Network_training
+from utils_train import whole_process_training_single_iter, whole_process_training, whole_Network_training
 from utils_model import display_metrics
 
 import random

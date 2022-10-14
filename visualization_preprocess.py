@@ -9,9 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt 
 
 
-# data_dir = 'vsb-power-line-fault-detection/'
-data_dir = 'C:/Users/Chao Huang/Desktop/OneDrive - Florida State University/PhD/Fault Detection/vsb-power-line-fault-detection/'
-# signal_df = pq.read_pandas(data_dir + 'train.parquet', columns=[str(i) for i in range(3,6)]).to_pandas()
+data_dir = 'vsb-power-line-fault-detection/'
 signal_df_0 = pq.read_pandas(data_dir + 'train.parquet', columns=[str(i) for i in range(3)]).to_pandas()
 signal_df_1 = pq.read_pandas(data_dir + 'train.parquet', columns=[str(i) for i in range(3,6)]).to_pandas()
 signal_len = signal_df_0.shape[0]
