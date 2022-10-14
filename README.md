@@ -42,6 +42,7 @@ python main_cmd.py -h
 <details>
   <summary>A list of detailed command-line options</summary>
   
+  ```
   usage: main_cmd.py [-h] [--data_dir DATA_DIR] [--input_dir INPUT_DIR]
          [--preprocessed] [--recalculate_peaks] [--nchunks NCHUNKS]
          [--NN_level NN_LEVEL] [--NN_model NN_MODEL]
@@ -125,6 +126,7 @@ python main_cmd.py -h
         whether to extract the attention weights for analysis,
         only valid when load_attention_weights=False
         
+  ```
   </details>
   
 
@@ -232,4 +234,5 @@ python main_cmd.py -h
 # Acknowledgement
   - The keras implementation of MinimalRNN is from https://github.com/titu1994/keras-minimal-rnn. 
   - The code for preprocessing steps and global-scale feature extraction is from Kunjin Chen @yalikjc, 
+  
     *Reference*: Chen, K., Vantuch, T., Zhang, Y., Hu, J., & He, J. (2020). Fault detection for covered conductors with high-frequency voltage signals: From local patterns to global features. *IEEE Transactions on Smart Grid*, 12(2), 1602-1614.
