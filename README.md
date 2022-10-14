@@ -3,7 +3,7 @@
 
 # Introduction
 ## Abstract
-#### The partial discharge (PD) detection is of critical importance in the stability and continuity of power distribution operations. Although several feature engineering methods have been developed to refine and improve PD detection accuracy, they can be suboptimal due to several major issues: (i) failure in identifying fault-related pulses, (ii) the lack of inner-phase temporal representation, and (iii) multi-scale feature integration. The aim of this paper is to develop a Learning based Multiscale Feature Engineering (LMFE) framework for PD detection of each signal in a 3-phase power system, while addressing the above issues. The 3-phase measurements are first preprocessed to identify the pulses together with the surrounded waveforms. Next, our feature engineering is conducted to extract the global-scale features, i.e., phase level and measurement level aggregations of the pulse-level information, and the local-scale features focusing on waveforms and their inner-phase temporal information. A recurrent neural network (RNN) model is trained, and intermediate features are extracted from this trained RNN model. Furthermore, these multi-scale features are merged and fed into a classifier to distinguish the different patterns between faulty and non-faulty signals. Finally, our LMFE is evaluated by analyzing the VSB ENET dataset, which shows that LMFE outperforms existing approaches and provides the state-of-the-art solution in the PD detection.
+**The partial discharge (PD) detection is of critical importance in the stability and continuity of power distribution operations. Although several feature engineering methods have been developed to refine and improve PD detection accuracy, they can be suboptimal due to several major issues: (i) failure in identifying fault-related pulses, (ii) the lack of inner-phase temporal representation, and (iii) multi-scale feature integration. The aim of this paper is to develop a Learning based Multiscale Feature Engineering (LMFE) framework for PD detection of each signal in a 3-phase power system, while addressing the above issues. The 3-phase measurements are first preprocessed to identify the pulses together with the surrounded waveforms. Next, our feature engineering is conducted to extract the global-scale features, i.e., phase level and measurement level aggregations of the pulse-level information, and the local-scale features focusing on waveforms and their inner-phase temporal information. A recurrent neural network (RNN) model is trained, and intermediate features are extracted from this trained RNN model. Furthermore, these multi-scale features are merged and fed into a classifier to distinguish the different patterns between faulty and non-faulty signals. Finally, our LMFE is evaluated by analyzing the VSB ENET dataset, which shows that LMFE outperforms existing approaches and provides the state-of-the-art solution in the PD detection.**
 
 <details>
   <summary>Examples of Three-phase Measurement Signals</summary>  
@@ -226,6 +226,25 @@ python main_cmd.py -h
 
   **Model_performance.ipynb** presents the performance comparison.
 
+<details>
+  <summary>The top 100 important features</summary>
+
+  ![top100features](/figures/top100features.jpg)
+
+  Fig 4. The top 100 important features sorted by the logarithm-scale importance gain. The local-scale features are highlighted in blue, while the global-scale
+features are indicated in red.
+
+</details>
+
+
+<details>
+  <summary>Cluster centroids for representative waveforms from faulty signals</summary>
+
+  ![cluster centroids](/figures/centroid_waveform_for_faulty_signals.png)
+
+  Fig 5. The centroids for the waveform with the largest weights of different clusters for all faulty signals when k = 6.
+
+</details>
 
 
 # Data Source: 
@@ -235,4 +254,4 @@ python main_cmd.py -h
   - The keras implementation of MinimalRNN is from https://github.com/titu1994/keras-minimal-rnn. 
   - The code for preprocessing steps and global-scale feature extraction is from Kunjin Chen @yalikjc, 
   
-    *Reference*: Chen, K., Vantuch, T., Zhang, Y., Hu, J., & He, J. (2020). Fault detection for covered conductors with high-frequency voltage signals: From local patterns to global features. *IEEE Transactions on Smart Grid*, 12(2), 1602-1614.
+    **Reference**: Chen, K., Vantuch, T., Zhang, Y., Hu, J., & He, J. (2020). Fault detection for covered conductors with high-frequency voltage signals: From local patterns to global features. *IEEE Transactions on Smart Grid*, 12(2), 1602-1614.
