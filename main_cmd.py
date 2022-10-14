@@ -1,5 +1,7 @@
 import argparse 
 parser = argparse.ArgumentParser(description='Choice of RNN model, classifier, training level and number of dense layers')
+parser.add_argument('--data_dir', type=str, default='vsb-power-line-fault-detection/', help='the folder path for signal data')
+parser.add_argument('--input_dir', type=str, default='processed_input/', help='the folder path for the preprocessed data')
 parser.add_argument('--preprocessed', default=False, action='store_true', help='if the preprocessing steps have done for waveform and global feature extraction')
 parser.add_argument('--recalculate_peaks', default=False, action='store_true', help='whether to recalculate the peaks in the preprocessing step, only valid when preprocessed=False')
 parser.add_argument('--nchunks', type=int, default=160, help='number of chunks in waveforms, choose from 100,160,200,400')
@@ -34,7 +36,10 @@ parser.add_argument('--extract_attention_weights', default=False, action='store_
 args = parser.parse_args()
 
 print(args)
+
 signal_len = 800000
+data_dir = args.data_dir
+input_dir = args.input_dir
 preprocessed = args.preprocessed
 recalculate_peaks = args.recalculate_peaks
 nchunks = args.nchunks
@@ -84,7 +89,7 @@ from train import whole_process_training_single_iter, whole_process_training, wh
 
 meta_df = pd.read_csv('metadata_train.csv')
 signal_ids = meta_df['signal_id'].values
-
+# input_dir = 'processed_input/'
 
 # =============================================================================
 # ############ STEP 1 Preprocessing & Feature Extraction ######################
@@ -97,17 +102,17 @@ if not preprocessed:
 	# construct waveforms with given window size 
 	waveforms = choose_chunk_peak(all_flat_signals, all_points, window_size=window_size)
 	print(waveforms.shape)
-	pickle.dump(waveforms, open(data_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'wb'))
+	pickle.dump(waveforms, open(input_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'wb'))
 
     ##### STEP 1B. Extract Global Features #####
     if recalculate_peaks:
         signal_fft = calculate_50hz_fourier_coefficient(signal_df.values)
         signal_peaks = process_measurement(signal_df, meta_df, signal_fft)
-        signal_peaks.to_pickle('signal_peaks.pkl')
+        signal_peaks.to_pickle(input_dir + 'signal_peaks.pkl')
         del signal_fft
         gc.collect()
     else:
-        signal_peaks = pd.read_pickle(data_dir + 'signal_peaks.pkl')
+        signal_peaks = pd.read_pickle(input_dir + 'signal_peaks.pkl')
     signal_peaks = pd.merge(signal_peaks, meta_df[['signal_id', 'id_measurement', 'target']], on='signal_id', how='left')
 
     ### load KMeans results
@@ -116,18 +121,18 @@ if not preprocessed:
     # kmeans_A = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_A)
     # kmeans_B = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_B)
     # kmeans_C = KMeans(n_clusters=6, random_state=9, init='k-means++').fit(x_C)
-    kmeans = pickle.load(open(data_dir + 'kmeans.dat', 'rb'))
-    kmeans_A = pickle.load(open(data_dir + 'kmeans_A.dat', 'rb'))
-    kmeans_B = pickle.load(open(data_dir + 'kmeans_B.dat', 'rb'))
-    kmeans_C = pickle.load(open(data_dir + 'kmeans_C.dat', 'rb'))
+    kmeans = pickle.load(open(input_dir + 'kmeans.dat', 'rb'))
+    kmeans_A = pickle.load(open(input_dir + 'kmeans_A.dat', 'rb'))
+    kmeans_B = pickle.load(open(input_dir + 'kmeans_B.dat', 'rb'))
+    kmeans_C = pickle.load(open(input_dir + 'kmeans_C.dat', 'rb'))
 
     X_global = create_global_features(meta_df, signal_peaks, kmeans, kmeans_A, kmeans_B, kmeans_C)
-    X_global.to_csv(data_dir + 'global_features.csv')
+    X_global.to_csv(input_dir + 'global_features.csv')
 
 else:
-    X_global = pd.read_csv(data_dir + 'global_features.csv')
+    X_global = pd.read_csv(input_dir + 'global_features.csv')
     if not load_local_features:
-        waveforms = pickle.load(open(data_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'rb'))
+        waveforms = pickle.load(open(input_dir + 'all_chunk_waves_{}chunks.dat'.format(nchunks), 'rb'))
     else:
         waveforms = None 
 
